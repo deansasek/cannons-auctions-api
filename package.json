@@ -1,0 +1,21 @@
+{
+  "name": "cannons-auctions-api",
+  "version": "1.0.0",
+  "description": "REST API wrapper for Cannons Auctions - scrapes and transforms public auction data into structured JSON",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["auction", "cannons", "api", "scraper"],
+  "author": "",
+  "license": "Unlicense",
+  "dependencies": {
+    "axios": "^1.19.0",
+    "cheerio": "^1.2.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1"
+  }
+}
