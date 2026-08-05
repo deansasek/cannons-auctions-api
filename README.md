@@ -2,6 +2,52 @@
 
 A REST API integration for [Cannons Auctions](https://bid.cannonsauctions.com) that provides structured access to auction data including item search, auction listings, and detailed item information.
 
+## MCP (Model Context Protocol)
+
+This API is also available as an MCP server for Claude Code, enabling natural language access to auction data directly from Claude.
+
+### Installation
+
+**Globally (recommended):**
+```bash
+# Create the global MCP config directory if it doesn't exist
+mkdir -p ~/.claude
+
+# Add the MCP server to your global config
+cat > ~/.claude/.mcp.json << 'EOF'
+{
+  "mcpServers": {
+    "cannons-auctions-mcp": {
+      "command": "node",
+      "args": ["/path/to/cannons/mcp/server.js"]
+    }
+  }
+}
+EOF
+```
+
+**Per-project:**
+The `mcp/` directory and `.mcp.json` are included in the repo. From the project directory, Claude Code will automatically detect the MCP server.
+
+### Available MCP Tools
+
+| Tool | Description |
+|------|-------------|
+| `search_auctions` | Search auction items with filters, pagination, and price range |
+| `list_auctions` | List current auctions with pagination |
+| `get_auction_items` | Get all items in a specific auction |
+| `get_item_details` | Get detailed information about a specific auction item |
+
+### Usage Example
+
+```
+User: Find all items in the current auction with "chair" in the title
+Claude: Uses get_auction_items with search="chair" to return matching items
+
+User: What's the current bid on lot 165?
+Claude: Uses search_auctions to find lot 165, returns currentBid
+```
+
 ## Overview
 
 The Cannons Auctions API provides programmatic access to auction inventory, enabling:
