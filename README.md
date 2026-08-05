@@ -42,6 +42,8 @@ GET /api/search?search=keyword&filter=Current&sortBy=enddate_asc&page=1&pagesize
 | `sortBy` | string | `""` | Sort order: `enddate_asc`, `enddate_desc`, `ordernumber_asc`, `ordernumber_desc` |
 | `page` | integer | `1` | Page number |
 | `pagesize` | integer | `100` | Items per page (max 100) |
+| `minBid` | number | `null` | Minimum bid filter (e.g., 10) |
+| `maxBid` | number | `null` | Maximum bid filter (e.g., 100) |
 
 **Response:**
 ```json
@@ -79,10 +81,15 @@ GET /api/search?search=keyword&filter=Current&sortBy=enddate_asc&page=1&pagesize
 
 ### List Current Auctions
 ```
-GET /api/auctions
+GET /api/auctions?page=1&pagesize=20
 ```
 
 Returns auctions grouped by event with item counts and bid ranges.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `page` | integer | `1` | Page number |
+| `pagesize` | integer | `20` | Auctions per page (max 100) |
 
 **Response:**
 ```json
@@ -94,10 +101,45 @@ Returns auctions grouped by event with item counts and bid ranges.
         "title": "08/04/26: Part 1!! New Kent Online Estate Auction | Aga's Consignments LLC | Providence Forge VA 23140",
         "endDate": "2026-08-04T21:00:00.000Z",
         "itemCount": 100,
+        "auctionId": "base64-encoded-id",
         "bidRange": { "min": 31, "max": 210 }
       }
     ],
-    "total": 5
+    "pagination": {
+      "currentPage": 1,
+      "totalPages": 1,
+      "totalItems": 5,
+      "itemsPerPage": 20
+    }
+  }
+}
+```
+
+### Get Auction Items
+```
+GET /api/auctions/:auctionId/items?page=1&pagesize=100
+```
+
+Returns all items for a specific auction.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `auctionId` | string | required | Auction identifier |
+| `page` | integer | `1` | Page number |
+| `pagesize` | integer | `100` | Items per page (max 100) |
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [...],
+    "pagination": {
+      "currentPage": 1,
+      "totalPages": 10,
+      "totalItems": 1000,
+      "itemsPerPage": 100
+    }
   }
 }
 ```
@@ -180,6 +222,18 @@ curl "http://localhost:1337/api/search?sortBy=enddate_desc"
 
 # By lot number
 curl "http://localhost:1337/api/search?sortBy=ordernumber_asc"
+```
+
+### Filter by price range
+```bash
+# Items with bids between $10 and $50
+curl "http://localhost:1337/api/search?minBid=10&maxBid=50"
+
+# Items with minimum bid of $100
+curl "http://localhost:1337/api/search?minBid=100"
+
+# Items with maximum bid of $25
+curl "http://localhost:1337/api/search?maxBid=25"
 ```
 
 ## Architecture
