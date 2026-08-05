@@ -19,7 +19,7 @@ cat > ~/.claude/.mcp.json << 'EOF'
   "mcpServers": {
     "cannons-auctions-mcp": {
       "command": "node",
-      "args": ["/path/to/cannons/mcp/server.js"]
+      "args": ["./mcp/server.js"]
     }
   }
 }
