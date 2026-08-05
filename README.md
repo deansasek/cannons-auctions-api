@@ -10,20 +10,7 @@ This API is also available as an MCP server for Claude Code, enabling natural la
 
 **Globally (recommended):**
 ```bash
-# Create the global MCP config directory if it doesn't exist
-mkdir -p ~/.claude
-
-# Add the MCP server to your global config
-cat > ~/.claude/.mcp.json << 'EOF'
-{
-  "mcpServers": {
-    "cannons-auctions-mcp": {
-      "command": "node",
-      "args": ["./mcp/server.js"]
-    }
-  }
-}
-EOF
+claude mcp add -s user cannons-auctions-mcp node ./mcp/server.js
 ```
 
 **Per-project:**
