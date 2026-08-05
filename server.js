@@ -154,7 +154,7 @@ app.get('/health', (req, res) => {
  */
 app.get('/api/search', async (req, res) => {
   try {
-    const { search, filter, sortBy, page, pagesize, minBid, maxBid } = req.query;
+    const { search, filter, sortBy, page, pagesize, minBid, maxBid, sanitize } = req.query;
 
     const html = await fetchSearchResults({
       search: search || '',
@@ -176,6 +176,19 @@ app.get('/api/search', async (req, res) => {
         if (min !== null && item.currentBid < min) return false;
         if (max !== null && item.currentBid > max) return false;
         return true;
+      });
+      results.pagination.totalItems = results.items.length;
+      results.pagination.totalPages = Math.ceil(results.items.length / 100);
+    }
+
+    // Sanitize titles for better matching if requested
+    if (sanitize === 'true' || sanitize === '1') {
+      const normalizedSearch = (search || '').toLowerCase().replace(/[^\w\s]/g, '');
+
+      results.items = results.items.filter(item => {
+        const normalizedTitle = (item.title || '').toLowerCase().replace(/[^\w\s]/g, '');
+        const normalizedDesc = (item.description || '').toLowerCase().replace(/[^\w\s]/g, '');
+        return normalizedTitle.includes(normalizedSearch) || normalizedDesc.includes(normalizedSearch);
       });
       results.pagination.totalItems = results.items.length;
       results.pagination.totalPages = Math.ceil(results.items.length / 100);
@@ -361,10 +374,10 @@ app.get('/api/auctions', async (req, res) => {
 app.get('/api/auctions/:auctionId/items', async (req, res) => {
   try {
     const { auctionId } = req.params;
-    const { page = 1, pagesize = 100 } = req.query;
+    const { page = 1, pagesize = 100, search, sanitize } = req.query;
 
     const html = await fetchSearchResults({
-      search: '',
+      search: search || '',
       filter: 'Current',
       sortBy: 'ordernumber_asc',
       page: parseInt(page),
@@ -372,10 +385,23 @@ app.get('/api/auctions/:auctionId/items', async (req, res) => {
       auctionId: auctionId
     });
 
-    const results = parseSearchResults(html);
+    let results = parseSearchResults(html);
 
     // Filter to only items from this auction
     results.items = results.items.filter(item => item.ids.auctionId === auctionId);
+
+    // Sanitize titles for better matching if requested
+    if (sanitize === 'true' || sanitize === '1') {
+      const normalizedSearch = (search || '').toLowerCase().replace(/[^\w\s]/g, '');
+
+      results.items = results.items.filter(item => {
+        const normalizedTitle = (item.title || '').toLowerCase().replace(/[^\w\s]/g, '');
+        const normalizedDesc = (item.description || '').toLowerCase().replace(/[^\w\s]/g, '');
+        return normalizedTitle.includes(normalizedSearch) || normalizedDesc.includes(normalizedSearch);
+      });
+      results.pagination.totalItems = results.items.length;
+      results.pagination.totalPages = Math.ceil(results.items.length / 100);
+    }
 
     res.json({
       success: true,

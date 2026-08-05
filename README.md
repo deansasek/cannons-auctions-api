@@ -44,6 +44,7 @@ GET /api/search?search=keyword&filter=Current&sortBy=enddate_asc&page=1&pagesize
 | `pagesize` | integer | `100` | Items per page (max 100) |
 | `minBid` | number | `null` | Minimum bid filter (e.g., 10) |
 | `maxBid` | number | `null` | Maximum bid filter (e.g., 100) |
+| `sanitize` | boolean | `false` | Normalize text for better matching (lowercase, remove punctuation) |
 
 **Response:**
 ```json
@@ -127,6 +128,8 @@ Returns all items for a specific auction.
 | `auctionId` | string | required | Auction identifier |
 | `page` | integer | `1` | Page number |
 | `pagesize` | integer | `100` | Items per page (max 100) |
+| `search` | string | `""` | Search term to filter items within auction |
+| `sanitize` | boolean | `false` | Normalize text for better matching (lowercase, remove punctuation) |
 
 **Response:**
 ```json
