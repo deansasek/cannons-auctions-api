@@ -63,8 +63,13 @@ async function getAuctionItems(auctionId, args) {
 /**
  * Get item details
  */
-async function getItemDetails(itemId, auctionId) {
-  return cannonFetch(`/api/item/${itemId}/${auctionId}`);
+async function getItemDetails(itemId, auctionId, pageNumber, pageSize) {
+  const params = new URLSearchParams();
+  if (pageNumber) params.set('pageNumber', pageNumber);
+  if (pageSize) params.set('pageSize', pageSize);
+
+  const query = params.toString() ? `?${params}` : '';
+  return cannonFetch(`/api/item/${itemId}/${auctionId}${query}`);
 }
 
 /**
@@ -139,6 +144,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           properties: {
             itemId: { type: 'string', description: 'The item ID (from search or get_auction_items)' },
             auctionId: { type: 'string', description: 'The auction ID' },
+            pageNumber: { type: 'string', description: 'Page number from search results (recommended)' },
+            pageSize: { type: 'string', description: 'Page size from search results (recommended)' },
           },
           required: ['itemId', 'auctionId'],
         },
@@ -170,7 +177,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         break;
 
       case 'get_item_details':
-        result = await getItemDetails(args.itemId, args.auctionId);
+        result = await getItemDetails(args.itemId, args.auctionId, args.pageNumber, args.pageSize);
         break;
 
       default:
