@@ -2,7 +2,7 @@
   "mcpServers": {
     "cannons-auctions-mcp": {
       "command": "node",
-      "args": ["/Users/deansasek/Documents/Projects/cannons/mcp/server.js"]
+      "args": ["./mcp/server.js"]
     }
   }
 }
