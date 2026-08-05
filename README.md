@@ -2,6 +2,26 @@
 
 A REST API integration for [Cannons Auctions](https://bid.cannonsauctions.com) that provides structured access to auction data including item search, auction listings, and detailed item information.
 
+## Overview
+
+The Cannons Auctions API provides programmatic access to auction inventory, enabling:
+- Full-text search across auction items
+- Browsing current, past, and upcoming auctions
+- Retrieving detailed item information including descriptions and images
+- Integration with existing applications and workflows
+
+## Quick Start
+
+```bash
+# Install dependencies
+npm install
+
+# Start the server
+node server.js
+
+# Server runs on http://localhost:1337
+```
+
 ## MCP (Model Context Protocol)
 
 This API is also available as an MCP server for Claude Code, enabling natural language access to auction data directly from Claude.
@@ -33,26 +53,6 @@ Claude: Uses get_auction_items with search="chair" to return matching items
 
 User: What's the current bid on lot 165?
 Claude: Uses search_auctions to find lot 165, returns currentBid
-```
-
-## Overview
-
-The Cannons Auctions API provides programmatic access to auction inventory, enabling:
-- Full-text search across auction items
-- Browsing current, past, and upcoming auctions
-- Retrieving detailed item information including descriptions and images
-- Integration with existing applications and workflows
-
-## Quick Start
-
-```bash
-# Install dependencies
-npm install
-
-# Start the server
-node server.js
-
-# Server runs on http://localhost:1337
 ```
 
 ## API Endpoints
