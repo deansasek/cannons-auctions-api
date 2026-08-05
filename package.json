@@ -7,13 +7,19 @@
     "start": "node server.js",
     "dev": "node server.js"
   },
-  "keywords": ["auction", "cannons", "api", "scraper"],
+  "keywords": [
+    "auction",
+    "cannons",
+    "api",
+    "scraper"
+  ],
   "author": "https://github.com/deansasek/",
   "license": "Unlicense",
   "dependencies": {
     "axios": "^1.19.0",
     "cheerio": "^1.2.0",
     "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "swagger-jsdoc": "^6.3.0",
     "swagger-ui-express": "^5.0.1"

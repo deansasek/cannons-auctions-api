@@ -19,7 +19,7 @@ npm install
 # Start the server
 node server.js
 
-# Server runs on http://localhost:3000
+# Server runs on http://localhost:1337
 ```
 
 ## API Endpoints
@@ -148,38 +148,38 @@ Interactive Swagger UI with all endpoints documented and testable.
 
 ### Search for items
 ```bash
-curl "http://localhost:3000/api/search?search=plate"
+curl "http://localhost:1337/api/search?search=plate"
 ```
 
 ### Get all current auctions
 ```bash
-curl "http://localhost:3000/api/auctions"
+curl "http://localhost:1337/api/auctions"
 ```
 
 ### Get item details
 ```bash
-curl "http://localhost:3000/api/item/{itemId}/{auctionId}?pageNumber={pageNumber}&pageSize={pageSize}"
+curl "http://localhost:1337/api/item/{itemId}/{auctionId}?pageNumber={pageNumber}&pageSize={pageSize}"
 ```
 
 ### Filter by auction status
 ```bash
 # Past auctions
-curl "http://localhost:3000/api/search?filter=Past&page=1"
+curl "http://localhost:1337/api/search?filter=Past&page=1"
 
 # Future auctions
-curl "http://localhost:3000/api/search?filter=Future&page=1"
+curl "http://localhost:1337/api/search?filter=Future&page=1"
 ```
 
 ### Sort results
 ```bash
 # By end date (ascending - ending soonest first)
-curl "http://localhost:3000/api/search?sortBy=enddate_asc"
+curl "http://localhost:1337/api/search?sortBy=enddate_asc"
 
 # By end date (descending)
-curl "http://localhost:3000/api/search?sortBy=enddate_desc"
+curl "http://localhost:1337/api/search?sortBy=enddate_desc"
 
 # By lot number
-curl "http://localhost:3000/api/search?sortBy=ordernumber_asc"
+curl "http://localhost:1337/api/search?sortBy=ordernumber_asc"
 ```
 
 ## Architecture

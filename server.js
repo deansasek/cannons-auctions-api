@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
@@ -6,7 +7,7 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 1337;
 
 app.use(cors());
 app.use(express.json());
@@ -153,7 +154,7 @@ app.get('/health', (req, res) => {
  */
 app.get('/api/search', async (req, res) => {
   try {
-    const { search, filter, sortBy, page, pagesize } = req.query;
+    const { search, filter, sortBy, page, pagesize, minBid, maxBid } = req.query;
 
     const html = await fetchSearchResults({
       search: search || '',
@@ -163,7 +164,22 @@ app.get('/api/search', async (req, res) => {
       pagesize: parseInt(pagesize) || 100
     });
 
-    const results = parseSearchResults(html);
+    let results = parseSearchResults(html);
+
+    // Filter by price range if specified
+    if (minBid !== undefined || maxBid !== undefined) {
+      const min = minBid !== undefined ? parseFloat(minBid) : null;
+      const max = maxBid !== undefined ? parseFloat(maxBid) : null;
+
+      results.items = results.items.filter(item => {
+        if (item.currentBid === null) return false;
+        if (min !== null && item.currentBid < min) return false;
+        if (max !== null && item.currentBid > max) return false;
+        return true;
+      });
+      results.pagination.totalItems = results.items.length;
+      results.pagination.totalPages = Math.ceil(results.items.length / 100);
+    }
 
     res.json({
       success: true,
@@ -216,20 +232,40 @@ app.get('/api/search', async (req, res) => {
  */
 app.get('/api/auctions', async (req, res) => {
   try {
-    // Fetch search results and group by auction title
-    const html = await fetchSearchResults({
+    const { page = 1, pagesize = 20 } = req.query;
+    const pageNum = parseInt(page);
+    const pageSizeNum = Math.min(parseInt(pagesize) || 20, 100);
+
+    // Fetch all search results across pages to group by auction
+    // First get the total count
+    const firstPageHtml = await fetchSearchResults({
       search: '',
       filter: 'Current',
       sortBy: 'enddate_asc',
       page: 1,
       pagesize: 100
     });
+    const firstResults = parseSearchResults(firstPageHtml);
+    const totalItems = firstResults.pagination.totalItems;
+    const totalPages = Math.ceil(totalItems / 100);
 
-    // Reuse the search parsing logic, then group by auction
-    const results = parseSearchResults(html);
+    // Fetch all pages to get complete auction list
+    const allItems = [...firstResults.items];
+    for (let p = 2; p <= Math.min(totalPages, 10); p++) {
+      const html = await fetchSearchResults({
+        search: '',
+        filter: 'Current',
+        sortBy: 'enddate_asc',
+        page: p,
+        pagesize: 100
+      });
+      const results = parseSearchResults(html);
+      allItems.push(...results.items);
+    }
+
+    // Group by auction title
     const auctionMap = new Map();
-
-    results.items.forEach(item => {
+    allItems.forEach(item => {
       const title = item.auctionTitle;
       if (!auctionMap.has(title)) {
         auctionMap.set(title, {
@@ -237,7 +273,8 @@ app.get('/api/auctions', async (req, res) => {
           endDate: item.endDate,
           itemCount: 0,
           minBid: item.currentBid,
-          maxBid: item.currentBid
+          maxBid: item.currentBid,
+          auctionId: item.ids.auctionId
         });
       }
       const auction = auctionMap.get(title);
@@ -254,6 +291,7 @@ app.get('/api/auctions', async (req, res) => {
         title: auction.title,
         endDate: auction.endDate,
         itemCount: auction.itemCount,
+        auctionId: auction.auctionId,
         bidRange: auction.minBid && auction.maxBid ? {
           min: auction.minBid,
           max: auction.maxBid
@@ -264,15 +302,87 @@ app.get('/api/auctions', async (req, res) => {
     // Sort by end date
     auctions.sort((a, b) => new Date(a.endDate || 0) - new Date(b.endDate || 0));
 
+    // Paginate
+    const startIndex = (pageNum - 1) * pageSizeNum;
+    const paginatedAuctions = auctions.slice(startIndex, startIndex + pageSizeNum);
+
     res.json({
       success: true,
       data: {
-        auctions,
-        total: auctions.length
+        auctions: paginatedAuctions,
+        pagination: {
+          currentPage: pageNum,
+          totalPages: Math.ceil(auctions.length / pageSizeNum),
+          totalItems: auctions.length,
+          itemsPerPage: pageSizeNum
+        }
       }
     });
   } catch (error) {
     console.error('Auctions error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/auctions/{auctionId}/items:
+ *   get:
+ *     summary: Get all items in an auction
+ *     description: Returns all items for a specific auction by auctionId
+ *     parameters:
+ *       - in: path
+ *         name: auctionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Base64-encoded auction ID
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: pagesize
+ *         schema:
+ *           type: integer
+ *           default: 100
+ *         description: Items per page (max 100)
+ *     responses:
+ *       200:
+ *         description: Auction items
+ *       500:
+ *         description: Error fetching auction items
+ */
+app.get('/api/auctions/:auctionId/items', async (req, res) => {
+  try {
+    const { auctionId } = req.params;
+    const { page = 1, pagesize = 100 } = req.query;
+
+    const html = await fetchSearchResults({
+      search: '',
+      filter: 'Current',
+      sortBy: 'ordernumber_asc',
+      page: parseInt(page),
+      pagesize: parseInt(pagesize),
+      auctionId: auctionId
+    });
+
+    const results = parseSearchResults(html);
+
+    // Filter to only items from this auction
+    results.items = results.items.filter(item => item.ids.auctionId === auctionId);
+
+    res.json({
+      success: true,
+      data: results
+    });
+  } catch (error) {
+    console.error('Auction items error:', error);
     res.status(500).json({
       success: false,
       error: error.message
@@ -481,7 +591,7 @@ async function getSessionCookie() {
  * Fetch search results HTML from Cannons API
  */
 async function fetchSearchResults(params) {
-  const { search = '', filter = 'Current', sortBy = '', page = 1, pagesize = 100 } = params;
+  const { search = '', filter = 'Current', sortBy = '', page = 1, pagesize = 100, auctionId } = params;
 
   const { cookie, token } = await getSessionCookie();
 
@@ -493,6 +603,10 @@ async function fetchSearchResults(params) {
     search: search,
     _: Date.now()
   });
+
+  if (auctionId) {
+    queryParams.append('auctionId', auctionId);
+  }
 
   try {
     const response = await axios.get(
